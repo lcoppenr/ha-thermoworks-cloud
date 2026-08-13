@@ -11,7 +11,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from .tw_lib import AuthFactory, ThermoworksCloud, ResourceNotFoundError
 
-from .const import DEFAULT_SCAN_INTERVAL_SECONDS, DOMAIN, ACTIVE_COOK_SCAN_INTERVAL_SECONDS
+from .const import (
+    ACTIVE_COOK_SCAN_INTERVAL_SECONDS,
+    CLOUD_PROVIDERS,
+    CONF_CLOUD_PROVIDER,
+    DEFAULT_SCAN_INTERVAL_SECONDS,
+    DOMAIN,
+    PROVIDER_THERMOWORKS,
+)
 from .exceptions import MissingRequiredAttributeError
 from .models import ThermoworksDevice, ThermoworksChannel
 
@@ -65,7 +72,14 @@ class ThermoworksCoordinator(DataUpdateCoordinator[ThermoworksData]):
             update_interval=timedelta(seconds=self.poll_interval),
         )
         client_session = async_get_clientsession(hass)
-        self.auth_factory = AuthFactory(client_session)
+        provider = config_entry.data.get(CONF_CLOUD_PROVIDER, PROVIDER_THERMOWORKS)
+        provider_config = CLOUD_PROVIDERS[provider]
+        self.auth_factory = AuthFactory(
+            client_session,
+            api_key=provider_config["api_key"],
+            app_id=provider_config["app_id"],
+            referer=provider_config["referer"],
+        )
         self.api = None
 
     async def async_update_data(self) -> ThermoworksData:

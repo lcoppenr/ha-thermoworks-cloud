@@ -1,4 +1,30 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cloud Provider",
+        "description": "Select which cloud platform your devices are registered with.",
+        "data": {
+          "cloud_provider": "Cloud Provider"
+        }
+      },
+      "credentials": {
+        "title": "Account Credentials",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Account is already configured"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -6,11 +32,25 @@
         "data": {
           "scan_interval_minutes": "Poll interval (minutes)"
         },
-        "description": "Set how often to poll ThermoWorks Cloud. Polling automatically increases to 1 minute when a cook is detected."
+        "description": "Set how often to poll ThermoWorks Cloud. Polling automatically increases to 1 minute when a cook is detected.",
+        "data_description": {
+          "scan_interval": "How often to poll for updates"
+        }
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fan_connected": {
+        "name": "Connected"
+      },
+      "high_alarm": {
+        "name": "High Alarm"
+      },
+      "low_alarm": {
+        "name": "Low Alarm"
+      }
+    },
     "sensor": {
       "battery": {
         "name": "Battery"
@@ -44,6 +84,18 @@
       },
       "signal": {
         "name": "Signal Strength"
+      },
+      "fan_state": {
+        "name": "State"
+      },
+      "fan_set_temperature": {
+        "name": "Set Temperature"
+      },
+      "high_alarm_threshold": {
+        "name": "High Alarm Threshold"
+      },
+      "low_alarm_threshold": {
+        "name": "Low Alarm Threshold"
       }
     }
   }

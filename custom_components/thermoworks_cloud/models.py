@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from types import NoneType
 from typing import Any, Optional, Protocol, Type, TypeGuard, Union, get_args, get_origin, get_type_hints
-from .tw_lib.models import Device, DeviceChannel, FanInfo
+from .tw_lib.models import Alarm, Device, DeviceChannel, Fan
 
 from .exceptions import MissingRequiredAttributeError
 
@@ -45,17 +45,18 @@ class BaseDevice(Protocol):
     device_id: Optional[str] = None
     label: Optional[str] = None
     device_name: Optional[str] = None
+    device_display_units: Optional[str] = None
     firmware: Optional[str] = None
     battery: Optional[float] = None
     battery_state: Optional[str] = None
     wifi_strength: Optional[float] = None
+    signal_strength: Optional[float] = None
+    fan: Optional[Fan] = None
     last_seen: Optional[datetime] = None
     transmit_interval_in_seconds: Optional[int] = None
     session_start: Optional[datetime] = None
     session_label: Optional[str] = None
     connected_ssid: Optional[str] = None
-    device_display_units: Optional[str] = None
-    fan: Optional[Any] = None
 
 
 @dataclass(frozen=True)
@@ -78,17 +79,18 @@ class ThermoworksDevice(BaseDevice):
             device_id=getattr(device, 'device_id', None),
             label=device.label,
             device_name=device.device_name,
+            device_display_units=getattr(device, "device_display_units", None),
             firmware=device.firmware,
             serial=device.serial,
             battery=device.battery,
             wifi_strength=device.wifi_strength,
+            signal_strength=device.signal_strength,
+            fan=getattr(device, "fan", None),
             last_seen=device.last_seen,
             transmit_interval_in_seconds=device.transmit_interval_in_seconds,
             session_start=getattr(device, 'session_start', None),
             session_label=getattr(device, 'session_label', None),
             connected_ssid=getattr(device, 'connected_ssid', None),
-            device_display_units=getattr(device, 'device_display_units', None),
-            fan=getattr(device, 'fan', None),
         )
 
     def get_identifier(self) -> str:
@@ -111,14 +113,25 @@ class DeviceWithBattery(ThermoworksDevice):
         return has_required_attributes(obj, DeviceWithBattery)
 
 
-class DeviceWithWifi(ThermoworksDevice):
-    """Protocol for devices with WiFi capability."""
-    wifi_strength: float
+class DeviceWithSignalStrength(ThermoworksDevice):
+    """Protocol for devices with signal strength information."""
+    signal_strength: float
 
     @classmethod
-    def is_protocol_compliant(cls, obj: Any) -> TypeGuard["DeviceWithWifi"]:
-        """Return True if the object implements DeviceWithWifi protocol."""
-        return has_required_attributes(obj, DeviceWithWifi)
+    def is_protocol_compliant(cls, obj: Any) -> TypeGuard["DeviceWithSignalStrength"]:
+        """Return True if the object implements DeviceWithSignalStrength protocol."""
+        return has_required_attributes(obj, DeviceWithSignalStrength)
+
+
+class DeviceWithFan(ThermoworksDevice):
+    """Protocol for devices with fan accessory information."""
+    fan: Fan
+
+    @classmethod
+    def is_protocol_compliant(cls, obj: Any) -> TypeGuard["DeviceWithFan"]:
+        """Return True if the object implements DeviceWithFan protocol."""
+        return (has_required_attributes(obj, DeviceWithFan)
+                and getattr(obj, 'fan', None) is not None)
 
 
 class DeviceWithLastSeen(ThermoworksDevice):
@@ -141,16 +154,6 @@ class DeviceWithTransmitInterval(ThermoworksDevice):
         return has_required_attributes(obj, DeviceWithTransmitInterval)
 
 
-class DeviceWithFan(ThermoworksDevice):
-    """Protocol for devices with fan controller."""
-    fan: Any
-
-    @classmethod
-    def is_protocol_compliant(cls, obj: Any) -> TypeGuard["DeviceWithFan"]:
-        """Return True if the object implements DeviceWithFan protocol."""
-        return has_required_attributes(obj, DeviceWithFan) and getattr(obj, 'fan', None) is not None
-
-
 @dataclass
 class ThermoworksChannel:
     """Represents a Thermoworks device channel with required properties for this integration."""
@@ -169,6 +172,8 @@ class ThermoworksChannel:
     calibration_unit: Optional[str] = None
     trim: Optional[Any] = None
     recent_readings: Optional[list] = None
+    alarm_high: Optional[Alarm] = None
+    alarm_low: Optional[Alarm] = None
 
     @classmethod
     def is_thermoworks_channel(cls, obj: Any) -> TypeGuard["ThermoworksChannel"]:
@@ -198,9 +203,31 @@ class ThermoworksChannel:
             calibration_unit=getattr(channel, 'calibration_unit', None),
             trim=getattr(channel, 'trim', None),
             recent_readings=getattr(channel, 'recent_readings', None),
+            alarm_high=getattr(channel, 'alarm_high', None),
+            alarm_low=getattr(channel, 'alarm_low', None),
         )
 
     def display_name(self) -> str:
         """Return the display name of the channel."""
         # {user given name} (Ch. {channel number})
         return f"{self.label or 'unnamed channel'} (Ch. {self.number})"
+
+
+class ChannelWithHighAlarm(ThermoworksChannel):
+    """Protocol for channels with high alarm information."""
+    alarm_high: Alarm
+
+    @classmethod
+    def is_protocol_compliant(cls, obj: Any) -> TypeGuard["ChannelWithHighAlarm"]:
+        """Return True if the object implements ChannelWithHighAlarm protocol."""
+        return has_required_attributes(obj, ChannelWithHighAlarm)
+
+
+class ChannelWithLowAlarm(ThermoworksChannel):
+    """Protocol for channels with low alarm information."""
+    alarm_low: Alarm
+
+    @classmethod
+    def is_protocol_compliant(cls, obj: Any) -> TypeGuard["ChannelWithLowAlarm"]:
+        """Return True if the object implements ChannelWithLowAlarm protocol."""
+        return has_required_attributes(obj, ChannelWithLowAlarm)

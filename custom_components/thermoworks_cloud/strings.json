@@ -37,6 +37,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "fan_connected": {
+        "name": "Connected"
+      },
+      "high_alarm": {
+        "name": "High Alarm"
+      },
+      "low_alarm": {
+        "name": "Low Alarm"
+      }
+    },
     "sensor": {
       "battery": {
         "name": "[%key:component::sensor::entity_component::signal::name%]"
@@ -70,6 +81,12 @@
       },
       "signal": {
         "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      },
+      "high_alarm_threshold": {
+        "name": "High Alarm Threshold"
+      },
+      "low_alarm_threshold": {
+        "name": "Low Alarm Threshold"
       }
     }
   }
